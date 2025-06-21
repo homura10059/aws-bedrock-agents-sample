@@ -66,9 +66,109 @@ export class BedrockAgentStack extends cdk.Stack {
       new iam.ServicePrincipal('bedrock.amazonaws.com')
     );
 
+    // Define the OpenAPI schema as a string
+    const apiSchemaJson = JSON.stringify({
+      openapi: '3.0.0',
+      info: {
+        title: 'Sample Actions API',
+        version: '1.0.0',
+        description: 'API for sample agent actions',
+      },
+      paths: {
+        '/get-current-time': {
+          get: {
+            summary: 'Get current time',
+            description: 'Returns the current date and time',
+            operationId: 'getCurrentTime',
+            responses: {
+              '200': {
+                description: 'Successful response',
+                content: {
+                  'application/json': {
+                    schema: {
+                      type: 'object',
+                      properties: {
+                        currentTime: {
+                          type: 'string',
+                          description: 'Current date and time in ISO format',
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        '/process-text': {
+          post: {
+            summary: 'Process text input',
+            description: 'Processes and analyzes the provided text',
+            operationId: 'processText',
+            requestBody: {
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      text: {
+                        type: 'string',
+                        description: 'Text to be processed',
+                      },
+                      operation: {
+                        type: 'string',
+                        enum: ['count_words', 'count_characters', 'to_uppercase', 'to_lowercase'],
+                        description: 'Operation to perform on the text',
+                      },
+                    },
+                    required: ['text', 'operation'],
+                  },
+                },
+              },
+            },
+            responses: {
+              '200': {
+                description: 'Successful response',
+                content: {
+                  'application/json': {
+                    schema: {
+                      type: 'object',
+                      properties: {
+                        result: {
+                          type: 'string',
+                          description: 'Result of the text processing operation',
+                        },
+                        originalText: {
+                          type: 'string',
+                          description: 'Original input text',
+                        },
+                        operation: {
+                          type: 'string',
+                          description: 'Operation that was performed',
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    // Create the action group
+    const sampleActionGroup = new bedrock.AgentActionGroup({
+      name: 'sample-actions',
+      description: 'Sample action group for basic operations',
+      executor: bedrock.ActionGroupExecutor.fromLambda(actionGroupLambda),
+      enabled: true,
+      apiSchema: bedrock.ApiSchema.fromInline(apiSchemaJson),
+    });
+
     // Create the Bedrock Agent
     const agent = new bedrock.Agent(this, 'SampleAgent', {
-      name: 'sample-text-agent',
+      agentName: 'sample-text-agent',
       description: 'A sample Bedrock Agent for text processing and Q&A',
       foundationModel: bedrock.BedrockFoundationModel.AMAZON_TITAN_TEXT_EXPRESS_V1,
       instruction: `You are a helpful assistant that can answer questions and process text.
@@ -77,111 +177,14 @@ export class BedrockAgentStack extends cdk.Stack {
       If you're unsure about something, please say so rather than making up information.`,
       idleSessionTTL: cdk.Duration.minutes(30),
       shouldPrepareAgent: true,
-      agentResourceRoleArn: agentRole.roleArn,
-    });
-
-    // Add Action Group to the Agent
-    agent.addActionGroup({
-      actionGroupName: 'sample-actions',
-      description: 'Sample action group for basic operations',
-      actionGroupExecutor: {
-        lambda: actionGroupLambda,
-      },
-      actionGroupState: 'ENABLED',
-      apiSchema: bedrock.ApiSchema.fromInline({
-        openapi: '3.0.0',
-        info: {
-          title: 'Sample Actions API',
-          version: '1.0.0',
-          description: 'API for sample agent actions',
-        },
-        paths: {
-          '/get-current-time': {
-            get: {
-              summary: 'Get current time',
-              description: 'Returns the current date and time',
-              operationId: 'getCurrentTime',
-              responses: {
-                '200': {
-                  description: 'Successful response',
-                  content: {
-                    'application/json': {
-                      schema: {
-                        type: 'object',
-                        properties: {
-                          currentTime: {
-                            type: 'string',
-                            description: 'Current date and time in ISO format',
-                          },
-                        },
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          },
-          '/process-text': {
-            post: {
-              summary: 'Process text input',
-              description: 'Processes and analyzes the provided text',
-              operationId: 'processText',
-              requestBody: {
-                content: {
-                  'application/json': {
-                    schema: {
-                      type: 'object',
-                      properties: {
-                        text: {
-                          type: 'string',
-                          description: 'Text to be processed',
-                        },
-                        operation: {
-                          type: 'string',
-                          enum: ['count_words', 'count_characters', 'to_uppercase', 'to_lowercase'],
-                          description: 'Operation to perform on the text',
-                        },
-                      },
-                      required: ['text', 'operation'],
-                    },
-                  },
-                },
-              },
-              responses: {
-                '200': {
-                  description: 'Successful response',
-                  content: {
-                    'application/json': {
-                      schema: {
-                        type: 'object',
-                        properties: {
-                          result: {
-                            type: 'string',
-                            description: 'Result of the text processing operation',
-                          },
-                          originalText: {
-                            type: 'string',
-                            description: 'Original input text',
-                          },
-                          operation: {
-                            type: 'string',
-                            description: 'Operation that was performed',
-                          },
-                        },
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
-      }),
+      existingRole: agentRole,
+      actionGroups: [sampleActionGroup],
     });
 
     // Create an Agent Alias for deployment
-    const agentAlias = agent.addAlias({
-      aliasName: 'prod',
+    const agentAlias = new bedrock.AgentAlias(this, 'SampleAgentAlias', {
+      agent: agent,
+      agentAliasName: 'prod',
       description: 'Production alias for the sample agent',
     });
 
