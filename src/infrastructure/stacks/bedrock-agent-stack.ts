@@ -70,7 +70,7 @@ export class BedrockAgentStack extends cdk.Stack {
     const agent = new bedrock.Agent(this, 'SampleAgent', {
       name: 'sample-text-agent',
       description: 'A sample Bedrock Agent for text processing and Q&A',
-      foundationModel: bedrock.BedrockFoundationModel.AMAZON_TITAN_TEXT_G1_EXPRESS_V1,
+      foundationModel: bedrock.BedrockFoundationModel.AMAZON_TITAN_TEXT_EXPRESS_V1,
       instruction: `You are a helpful assistant that can answer questions and process text.
       You have access to action groups that can perform specific tasks.
       Always be polite and helpful in your responses.
