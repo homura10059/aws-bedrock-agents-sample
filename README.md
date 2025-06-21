@@ -161,13 +161,6 @@ foundationModel: bedrock.BedrockFoundationModel.ANTHROPIC_CLAUDE_HAIKU_V1_0, // 
 | `npm run diff` | デプロイ前の差分確認 |
 | `npm run destroy` | リソースを削除 |
 
-## 貢献
-
-プルリクエストやイシューは歓迎です！
-
-## ライセンス
-
-MIT License
 
 ## 参考リンク
 
