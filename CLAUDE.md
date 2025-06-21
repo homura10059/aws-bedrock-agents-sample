@@ -15,7 +15,14 @@ Based on .gitignore patterns, this project is intended to use:
 
 ## Development Commands
 
-*Note: Commands will be added as the project structure develops and package.json/build tools are configured.*
+- `npm install` - Install dependencies
+- `npm run build` - Build TypeScript code 
+- `npm test` - Run tests
+- `npm run watch` - Watch mode for development
+- `npm run deploy` - Build and deploy to AWS
+- `npm run synth` - Build and synthesize CDK templates
+
+**IMPORTANT**: Always run `npm run build` after completing any task to ensure the code compiles without TypeScript errors. This is a critical requirement for maintaining code quality.
 
 ## Architecture
 
