@@ -35,8 +35,8 @@ export class BedrockAgentStack extends cdk.Stack {
                 'bedrock:InvokeModel',
               ],
               resources: [
-                // Amazon Titan Text G1 - Express (cheapest option)
-                `arn:aws:bedrock:${this.region}::foundation-model/amazon.titan-text-express-v1`,
+                // Claude 3.5 Haiku - cheapest model with tool use support
+                `arn:aws:bedrock:${this.region}::foundation-model/anthropic.claude-3-5-haiku-20241022-v1:0`,
               ],
             }),
           ],
@@ -170,7 +170,7 @@ export class BedrockAgentStack extends cdk.Stack {
     const agent = new bedrock.Agent(this, 'SampleAgent', {
       agentName: 'sample-text-agent',
       description: 'A sample Bedrock Agent for text processing and Q&A',
-      foundationModel: bedrock.BedrockFoundationModel.AMAZON_TITAN_TEXT_EXPRESS_V1,
+      foundationModel: bedrock.BedrockFoundationModel.ANTHROPIC_CLAUDE_3_5_HAIKU_V1_0,
       instruction: `You are a helpful assistant that can answer questions and process text.
       You have access to action groups that can perform specific tasks.
       Always be polite and helpful in your responses.
